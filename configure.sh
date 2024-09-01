@@ -135,7 +135,10 @@ systemctl restart ssh
 
 # 8. Install and Configure Fail2Ban
 print_section "Installing and Configuring Fail2Ban"
-install_if_not_exists fail2ban
+echo "Installing fail2ban. This may take a few minutes..."
+DEBIAN_FRONTEND=noninteractive apt install -y fail2ban
+
+echo "Configuring fail2ban..."
 cp /etc/fail2ban/jail.conf /etc/fail2ban/jail.local
 cat << EOF > /etc/fail2ban/jail.local
 [DEFAULT]
@@ -151,8 +154,13 @@ logpath = /var/log/auth.log
 maxretry = 3
 bantime = 1d
 EOF
+
+echo "Starting and enabling fail2ban service..."
 systemctl start fail2ban
 systemctl enable fail2ban
+
+echo "Checking fail2ban status..."
+systemctl is-active --quiet fail2ban && echo "fail2ban is running" || echo "fail2ban failed to start"
 
 # 9. Configure Automatic Security Updates
 print_section "Configuring Automatic Security Updates"
@@ -172,11 +180,32 @@ Unattended-Upgrade::Automatic-Reboot-Time "02:00";' > /etc/apt/apt.conf.d/50unat
 print_section "Installing and Configuring OSSEC"
 if [ ! -d "/var/ossec" ]; then
     echo "OSSEC is not installed. Installing now..."
-    apt install build-essential make gcc libevent-dev libpcre2-dev libssl-dev zlib1g-dev libsystemd-dev -y
+    apt install -y build-essential make gcc libevent-dev libpcre2-dev libssl-dev zlib1g-dev libsystemd-dev
     wget https://github.com/ossec/ossec-hids/archive/3.7.0.tar.gz
     tar -xvzf 3.7.0.tar.gz
     cd ossec-hids-3.7.0
-    echo -e "\n\n\n\n\n\n\n" | ./install.sh
+
+    # Create an expect script to automate the installation
+    cat > ossec_install.exp << EOF
+#!/usr/bin/expect -f
+set timeout -1
+spawn ./install.sh
+
+expect "What kind of installation do you want (server, agent, local, hybrid or help)?" { send "local\r" }
+expect "Setting up the installation environment." { send "\r" }
+expect "Choose where to install the OSSEC HIDS" { send "\r" }
+expect "Do you want to add more IPs to the white list?" { send "n\r" }
+expect "Do you want to enable active response?" { send "y\r" }
+expect "Do you want to enable the firewall-drop response?" { send "y\r" }
+expect "Do you want to add more IPs to the white list?" { send "n\r" }
+expect "Do you want to enable remote syslog (port 514 udp)?" { send "n\r" }
+expect eof
+EOF
+
+    chmod +x ossec_install.exp
+    apt install -y expect
+    ./ossec_install.exp
+
     cd ..
     rm -rf ossec-hids-3.7.0 3.7.0.tar.gz
 else
