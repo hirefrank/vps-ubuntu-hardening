@@ -1,0 +1,13 @@
+# VPS Configuration Template
+# Rename this file to vps_config.env and fill in your values
+
+# Timezone
+TIMEZONE=America/New_York
+
+# Slack Webhook
+SLACK_WEBHOOK_URL=https://hooks.slack.com/services/YOUR/WEBHOOK/URL
+
+# Backblaze B2 Configuration
+B2_BUCKET_NAME=your-bucket-name
+B2_KEY_ID=your-key-id
+B2_APPLICATION_KEY=your-application-key
