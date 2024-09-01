@@ -191,6 +191,9 @@ if [ ! -d "/var/ossec" ]; then
 set timeout -1
 spawn ./install.sh
 
+# Handle language selection
+expect "Para instalação em português, escolha \\\[br\\\]." { send "en\r" }
+
 expect "What kind of installation do you want (server, agent, local, hybrid or help)?" { send "local\r" }
 expect "Setting up the installation environment." { send "\r" }
 expect "Choose where to install the OSSEC HIDS" { send "\r" }
