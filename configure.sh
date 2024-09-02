@@ -185,29 +185,18 @@ if [ ! -d "/var/ossec" ]; then
     tar -xvzf 3.7.0.tar.gz
     cd ossec-hids-3.7.0
 
-    # Create an expect script to automate the installation
-    cat > ossec_install.exp << EOF
-#!/usr/bin/expect -f
-set timeout -1
-spawn ./install.sh
+    # Use a here-document to provide input to the install script
+    ./install.sh << EOF
+en
 
-# Handle language selection
-expect "Para instalação em português, escolha \\\[br\\\]." { send "en\r" }
+local
 
-expect "What kind of installation do you want (server, agent, local, hybrid or help)?" { send "local\r" }
-expect "Setting up the installation environment." { send "\r" }
-expect "Choose where to install the OSSEC HIDS" { send "\r" }
-expect "Do you want to add more IPs to the white list?" { send "n\r" }
-expect "Do you want to enable active response?" { send "y\r" }
-expect "Do you want to enable the firewall-drop response?" { send "y\r" }
-expect "Do you want to add more IPs to the white list?" { send "n\r" }
-expect "Do you want to enable remote syslog (port 514 udp)?" { send "n\r" }
-expect eof
+n
+y
+y
+n
+n
 EOF
-
-    chmod +x ossec_install.exp
-    apt install -y expect
-    ./ossec_install.exp
 
     cd ..
     rm -rf ossec-hids-3.7.0 3.7.0.tar.gz
