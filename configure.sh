@@ -318,7 +318,6 @@ fi
 
 kopia policy set --global --compression=zstd --keep-latest 30 --keep-hourly 24 --keep-daily 7 --keep-weekly 4 --keep-monthly 12 --keep-annual 3
 
-# Create Kopia backup script
 cat << 'EOF' > /usr/local/bin/kopia-backup.sh
 #!/bin/bash
 
@@ -367,6 +366,11 @@ kopia snapshot create /root/package_list.txt
 if [ $? -eq 0 ]; then
     echo "Kopia backup to Backblaze B2 completed successfully" | /usr/local/bin/slack-notify.sh
 else
+    echo "Kopia backup to Backblaze B2 failed" | /usr/local/bin/slack-notify.sh
+fi
+EOF
+
+chmod +x /usr/local/bin/kopia-backup.sh
 
 print_section "VPS Hardening Complete"
 echo "Please review the changes and reboot your system."
