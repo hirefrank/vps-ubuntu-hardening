@@ -11,3 +11,6 @@ SLACK_WEBHOOK_URL=https://hooks.slack.com/services/YOUR/WEBHOOK/URL
 B2_BUCKET_NAME=your-bucket-name
 B2_KEY_ID=your-key-id
 B2_APPLICATION_KEY=your-application-key
+
+# Kopia Configuration
+KOPIA_REPOSITORY_PASSPHRASE=your-kopia-repository-passphrase

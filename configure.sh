@@ -54,6 +54,14 @@ for var in "${required_vars[@]}"; do
     fi
 done
 
+# Function to connect to Kopia repository
+connect_kopia_repository() {
+    if ! kopia repository status &>/dev/null; then
+        echo "Connecting to Kopia repository..."
+        kopia repository connect b2 --bucket="$B2_BUCKET_NAME" --key-id="$B2_KEY_ID" --key="$B2_APPLICATION_KEY" --password="$KOPIA_REPOSITORY_PASSPHRASE"
+    fi
+}
+
 # 1. Find the fastest mirror and update sources.list
 print_section "Finding the fastest mirror"
 
@@ -210,10 +218,26 @@ if [ -f "/var/ossec/bin/ossec-control" ]; then
 fi
 
 # 11. Install Logwatch and disable Postfix
-print_section "Installing Logwatch and disabling Postfix"
-install_if_not_exists logwatch
+print_section "Installing Logwatch and configuring Postfix"
+
+# Pre-configure Postfix to avoid prompts
+echo "postfix postfix/main_mailer_type select No configuration" | debconf-set-selections
+echo "postfix postfix/mailname string $(hostname -f)" | debconf-set-selections
+
+# Install Postfix and Logwatch non-interactively
+DEBIAN_FRONTEND=noninteractive apt-get install -y postfix logwatch
+
+# Disable Postfix
 systemctl stop postfix
 systemctl disable postfix
+
+# Configure Logwatch to use Slack
+cat << EOF > /etc/cron.daily/00logwatch
+#!/bin/bash
+/usr/sbin/logwatch --output stdout --format text --detail high | /usr/local/bin/slack-notify.sh
+EOF
+
+chmod +x /etc/cron.daily/00logwatch
 
 # 12. Set up Glances with Slack Notifications
 print_section "Setting up Glances with Slack Notifications"
@@ -279,16 +303,39 @@ else
     echo "Kopia is already installed."
 fi
 
-kopia repository create b2 \
-    --bucket="$B2_BUCKET_NAME" \
-    --key-id="$B2_KEY_ID" \
-    --key="$B2_APPLICATION_KEY"
+if ! kopia repository status &>/dev/null; then
+    echo "Creating Kopia repository..."
+    kopia repository create b2 \
+        --bucket="$B2_BUCKET_NAME" \
+        --key-id="$B2_KEY_ID" \
+        --key="$B2_APPLICATION_KEY" \
+        --password="$KOPIA_REPOSITORY_PASSPHRASE"
+else
+    echo "Kopia repository already exists. Connecting and validating..."
+    connect_kopia_repository
+    kopia repository validate-provider
+fi
 
 kopia policy set --global --compression=zstd --keep-latest 30 --keep-hourly 24 --keep-daily 7 --keep-weekly 4 --keep-monthly 12 --keep-annual 3
 
+# Create Kopia backup script
 cat << 'EOF' > /usr/local/bin/kopia-backup.sh
 #!/bin/bash
-source /etc/slack_config
+
+# Source the configuration file
+source /etc/vps_config.env
+
+# Function to connect to Kopia repository
+connect_kopia_repository() {
+    if ! kopia repository status &>/dev/null; then
+        echo "Connecting to Kopia repository..."
+        kopia repository connect b2 --bucket="$B2_BUCKET_NAME" --key-id="$B2_KEY_ID" --key="$B2_APPLICATION_KEY" --password="$KOPIA_REPOSITORY_PASSPHRASE"
+    fi
+}
+
+# Ensure connection to Kopia repository
+connect_kopia_repository
+
 directories=(
     "/etc"
     "/home"
@@ -299,24 +346,27 @@ directories=(
     "/opt"
     "/var/log"
 )
+
 for dir in "${directories[@]}"; do
-    kopia snapshot create "$dir"
-    if [ $? -ne 0 ]; then
-        /usr/local/bin/slack-notify.sh "Kopia backup failed for directory: $dir"
+    if [ -d "$dir" ] || [ -f "$dir" ]; then
+        echo "Backing up $dir..."
+        kopia snapshot create "$dir"
+        if [ $? -ne 0 ]; then
+            echo "Kopia backup failed for: $dir" | /usr/local/bin/slack-notify.sh
+        fi
+    else
+        echo "Directory or file not found: $dir. Skipping backup."
     fi
 done
+
+# Backup package list
+echo "Backing up package list..."
 dpkg --get-selections > /root/package_list.txt
 kopia snapshot create /root/package_list.txt
-if [ $? -eq 0 ]; then
-    /usr/local/bin/slack-notify.sh "Kopia backup to Backblaze B2 completed successfully"
-else
-    /usr/local/bin/slack-notify.sh "Kopia backup to Backblaze B2 failed"
-fi
-EOF
-chmod +x /usr/local/bin/kopia-backup.sh
 
-# Set up daily Kopia backup
-echo "0 2 * * * /usr/local/bin/kopia-backup.sh" | crontab -
+if [ $? -eq 0 ]; then
+    echo "Kopia backup to Backblaze B2 completed successfully" | /usr/local/bin/slack-notify.sh
+else
 
 print_section "VPS Hardening Complete"
 echo "Please review the changes and reboot your system."
