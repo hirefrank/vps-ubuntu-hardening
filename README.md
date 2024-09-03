@@ -19,10 +19,10 @@ This project aims to automate the process of hardening a Ubuntu 24.04 VPS. It im
 ## Prerequisites
 
 - A fresh Ubuntu 24.04 VPS (I used Minimal LTS but the full version should work too)
-- Root or sudo access to the server (I found Netcup's Root VPS to be the best value for money)
+- Root or sudo access to the server (I found [Netcup's Root VPS](https://www.netcup.com/en/server/root-server) to be the best value for money)
 - Basic knowledge of Linux command line
 - A Slack workspace with a webhook URL
-- Backblaze B2 credentials (but any S3-compatible storage should work with minor modifications)
+- Backblaze B2 credentials (Any S3-compatible storage should work with minor modifications)
 
 ## Quick Start
 
