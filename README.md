@@ -6,11 +6,12 @@ This guide provides an automated script for hardening an Ubuntu 24.04 VPS. The s
 1. [Introduction](#introduction)
 2. [Prerequisites](#prerequisites)
 3. [Quick Start](#quick-start)
-4. [What the Script Does](#what-the-script-does)
-5. [Configuration](#configuration)
-6. [Post-Installation Steps](#post-installation-steps)
-7. [Maintenance](#maintenance)
-8. [Troubleshooting](#troubleshooting)
+4. [SSH Key Setup](#ssh-key-setup)
+5. [What the Script Does](#what-the-script-does)
+6. [Configuration](#configuration)
+7. [Post-Installation Steps](#post-installation-steps)
+8. [Maintenance](#maintenance)
+9. [Troubleshooting](#troubleshooting)
 
 ## Introduction
 
@@ -26,22 +27,44 @@ This project aims to automate the process of hardening a Ubuntu 24.04 VPS. It im
 
 ## Quick Start
 
-1. Clone this repository:
+1. [SSH key setup on the server](#ssh-key-setup). The hardening script will disable password authentication for SSH, so it's essential to set up key-based authentication before running the script.
+
+2. Clone this repository:
    ```
    git clone https://github.com/your-repo/vps-hardening.git
    cd vps-hardening
    ```
 
-2. Copy the configuration template and edit it with your settings:
+3. Copy the configuration template and edit it with your settings:
    ```
    cp vps_config.template vps_config.env
    nano vps_config.env
    ```
 
-3. Run the script:
+4. Run the script:
    ```
    sudo ./configure.sh
    ```
+
+## SSH Key Setup
+
+1. Generate an SSH key pair on your local machine:
+   ```
+   ssh-keygen -t ed255519 -C "your_email@example.com"
+   ```
+
+2. Add the SSH public key to the server:
+   ```
+   ssh-copy-id user@your_server_ip
+   ```
+3. Test the SSH key authentication:
+   ```
+   ssh user@your_server_ip
+   ```
+4. If you can log in successfully using the SSH key, proceed with running the hardening script.
+
+_Replace 'user' with your username and 'your_server_ip' with your server's IP address._
+
 
 ## What the Script Does
 

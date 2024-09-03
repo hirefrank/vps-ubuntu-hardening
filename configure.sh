@@ -372,8 +372,16 @@ EOF
 chmod +x /usr/local/bin/kopia-backup.sh
 
 print_section "VPS Hardening Complete"
+
+# Prompt to enable ESM Apps
+echo "Would you like to enable Expanded Security Maintenance (ESM) for Applications?"
+echo "This will provide additional future security updates."
+read -p "Enable ESM Apps? (y/n) " enable_esm
+if [[ $enable_esm =~ ^[Yy]$ ]]; then
+    sudo pro enable esm-apps
+    echo "ESM Apps has been enabled."
+else
+    echo "ESM Apps was not enabled. You can enable it later by running: sudo pro enable esm-apps"
+fi
+
 echo "Please review the changes and reboot your system."
-echo "IMPORTANT: Before rebooting, use ssh-copy-id to add your SSH public key to the server:"
-echo "On your local machine, run: ssh-copy-id $SUDO_USER@<server_ip>"
-echo "This will ensure you can log in after the reboot."
-echo "After adding your SSH key and verifying access, reboot the server with: sudo reboot"
