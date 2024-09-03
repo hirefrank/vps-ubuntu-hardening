@@ -311,9 +311,8 @@ if ! kopia repository status &>/dev/null; then
         --key="$B2_APPLICATION_KEY" \
         --password="$KOPIA_REPOSITORY_PASSPHRASE"
 else
-    echo "Kopia repository already exists. Connecting and validating..."
+    echo "Kopia repository already exists. Connecting..."
     connect_kopia_repository
-    kopia repository validate-provider
 fi
 
 kopia policy set --global --compression=zstd --keep-latest 30 --keep-hourly 24 --keep-daily 7 --keep-weekly 4 --keep-monthly 12 --keep-annual 3
