@@ -31,7 +31,7 @@ This project aims to automate the process of hardening a Ubuntu 24.04 VPS. It im
 
 2. Clone this repository:
    ```
-   git clone https://github.com/your-repo/vps-hardening.git
+   git clone https://github.com/hirefrank/vps-ubuntu-hardening.git
    cd vps-hardening
    ```
 
