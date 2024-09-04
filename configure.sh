@@ -374,14 +374,8 @@ chmod +x /usr/local/bin/kopia-backup.sh
 print_section "VPS Hardening Complete"
 
 # Prompt to enable ESM Apps
-echo "Would you like to enable Expanded Security Maintenance (ESM) for Applications?"
-echo "This will provide additional future security updates."
-read -p "Enable ESM Apps? (y/n) " enable_esm
-if [[ $enable_esm =~ ^[Yy]$ ]]; then
-    sudo pro enable esm-apps
-    echo "ESM Apps has been enabled."
-else
-    echo "ESM Apps was not enabled. You can enable it later by running: sudo pro enable esm-apps"
-fi
-
+echo "***"
+echo "Enable ESM Apps to receive additional future security updates."
+echo "See https://ubuntu.com/esm or run: sudo pro status"
+echo "***"
 echo "Please review the changes and reboot your system."

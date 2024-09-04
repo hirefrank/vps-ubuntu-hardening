@@ -29,19 +29,21 @@ This project aims to automate the process of hardening a Ubuntu 24.04 VPS. It im
 
 1. [SSH key setup on the server](#ssh-key-setup). The hardening script will disable password authentication for SSH, so it's essential to set up key-based authentication before running the script.
 
-2. Clone this repository:
+2. Create a Slack webhook URL.
+
+3. Clone this repository:
    ```
    git clone https://github.com/hirefrank/vps-ubuntu-hardening.git
    cd vps-hardening
    ```
 
-3. Copy the configuration template and edit it with your settings:
+4. Copy the configuration template and edit it with your settings:
    ```
    cp vps_config.template vps_config.env
    nano vps_config.env
    ```
 
-4. Run the script:
+5. Run the script:
    ```
    sudo ./configure.sh
    ```
