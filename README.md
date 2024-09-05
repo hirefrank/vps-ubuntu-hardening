@@ -5,17 +5,16 @@ This guide provides an automated script for hardening an Ubuntu 24.04 VPS. The s
 ## Table of Contents
 1. [Introduction](#introduction)
 2. [Prerequisites](#prerequisites)
-3. [Quick Start](#quick-start)
-4. [SSH Key Setup](#ssh-key-setup)
-5. [What the Script Does](#what-the-script-does)
-6. [Configuration](#configuration)
-7. [Post-Installation Steps](#post-installation-steps)
-8. [Maintenance](#maintenance)
-9. [Troubleshooting](#troubleshooting)
+3. [What the Script Does](#what-the-script-does)
+4. [Configuration](#configuration)
+5. [Post-Installation Steps](#post-installation-steps)
+6. [Maintenance](#maintenance)
+7. [Troubleshooting](#troubleshooting)
 
 ## Introduction
 
-This project aims to automate the process of hardening a Ubuntu 24.04 VPS. It implements best practices for server security, including firewall configuration, intrusion detection, automatic updates, and secure backups.
+This project aims to automate the process of hardening a Ubuntu 24.04 VPS. It implements best practices for server security, including firewall configuration, intrusion detection, automatic updates, and secure backups. [Quick start guide &rarr;](https://medium.com/@hirefrank/you-can-do-hard-things-hardening-your-vps-e838af7dc3c9)
+
 
 ## Prerequisites
 
@@ -24,49 +23,6 @@ This project aims to automate the process of hardening a Ubuntu 24.04 VPS. It im
 - Basic knowledge of Linux command line
 - A Slack workspace with a webhook URL
 - Backblaze B2 credentials (Any S3-compatible storage should work with minor modifications)
-
-## Quick Start
-
-1. [SSH key setup on the server](#ssh-key-setup). The hardening script will disable password authentication for SSH, so it's essential to set up key-based authentication before running the script.
-
-2. Create a Slack webhook URL.
-
-3. Clone this repository:
-   ```
-   git clone https://github.com/hirefrank/vps-ubuntu-hardening.git
-   cd vps-ubuntu-hardening
-   ```
-
-4. Copy the configuration template and edit it with your settings:
-   ```
-   cp vps_config.template vps_config.env
-   nano vps_config.env
-   ```
-
-5. Run the script:
-   ```
-   sudo ./configure.sh
-   ```
-
-## SSH Key Setup
-
-1. Generate an SSH key pair on your local machine:
-   ```
-   ssh-keygen -t ed255519 -C "your_email@example.com"
-   ```
-
-2. Add the SSH public key to the server:
-   ```
-   ssh-copy-id user@your_server_ip
-   ```
-3. Test the SSH key authentication:
-   ```
-   ssh user@your_server_ip
-   ```
-4. If you can log in successfully using the SSH key, proceed with running the hardening script.
-
-_Replace 'user' with your username and 'your_server_ip' with your server's IP address._
-
 
 ## What the Script Does
 
