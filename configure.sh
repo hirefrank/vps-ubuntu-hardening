@@ -343,6 +343,7 @@ directories=(
     "/opt/docker-compose"
     "/opt"
     "/var/log"
+    "/etc/easypanel"
 )
 
 for dir in "${directories[@]}"; do
@@ -370,6 +371,12 @@ fi
 EOF
 
 chmod +x /usr/local/bin/kopia-backup.sh
+
+# Schedule daily Kopia backup
+print_section "Scheduling Daily Kopia Backup"
+(crontab -l 2>/dev/null; echo "# Daily Kopia backup at 2 AM
+0 2 * * * /usr/local/bin/kopia-backup.sh > /var/log/kopia-backup.log 2>&1") | crontab -
+echo "Kopia backup scheduled to run daily at 2 AM as root"
 
 print_section "VPS Hardening Complete"
 
