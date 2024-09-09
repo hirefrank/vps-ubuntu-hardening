@@ -291,7 +291,13 @@ chmod 600 /etc/slack_config
 cat << 'EOF' > /usr/local/bin/slack-notify.sh
 #!/bin/bash
 source /etc/slack_config
-message="$1"
+if [ -p /dev/stdin ]; then
+    # If data is piped in, read it
+    message=$(cat)
+else
+    # Otherwise, use the first argument
+    message="$1"
+fi
 curl -X POST -H 'Content-type: application/json' --data "{\"text\":\"$message\"}" "$SLACK_WEBHOOK_URL"
 EOF
 chmod +x /usr/local/bin/slack-notify.sh
