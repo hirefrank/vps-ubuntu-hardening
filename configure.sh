@@ -42,6 +42,10 @@ if [ ! -f "$CONFIG_FILE" ]; then
     exit 1
 fi
 
+# Copy the config file to /etc/vps_config.env
+cp "$CONFIG_FILE" /etc/vps_config.env
+chmod 600 /etc/vps_config.env
+
 # Source the configuration file
 source "$CONFIG_FILE"
 
@@ -380,7 +384,7 @@ CRON_FILE=$(mktemp)
 
 # Add the cron job to the temporary file
 echo "# Daily Kopia backup at 2 AM
-0 2 * * * /usr/local/bin/kopia-backup.sh 2>&1 | tee -a /var/log/kopia-backup.log | /usr/local/bin/slack-notify.sh" > "$CRON_FILE"
+0 2 * * * /usr/local/bin/kopia-backup.sh 2>&1 | tee -a /var/log/kopia-backup.log" > "$CRON_FILE"
 
 # Install the new crontab
 crontab "$CRON_FILE"
@@ -388,7 +392,7 @@ crontab "$CRON_FILE"
 # Remove the temporary file
 rm "$CRON_FILE"
 
-echo "Kopia backup scheduled to run daily at 2 AM as root, with output logged and sent to Slack"
+echo "Kopia backup scheduled to run daily at 2 AM as root, with output logged to /var/log/kopia-backup.log"
 
 print_section "VPS Hardening Complete"
 
