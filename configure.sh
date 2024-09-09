@@ -359,7 +359,7 @@ directories=(
 for dir in "${directories[@]}"; do
     if [ -d "$dir" ] || [ -f "$dir" ]; then
         echo "Backing up $dir..."
-        kopia snapshot create "$dir" --ignore "backingFsBlockDev"
+        kopia snapshot create "$dir"
         if [ $? -ne 0 ]; then
             echo "Kopia backup failed for: $dir" | /usr/local/bin/slack-notify.sh
         fi
