@@ -349,10 +349,9 @@ directories=(
     "/home"
     "/etc/docker"
     "/root/.docker"
-    "/var/lib/docker/volumes"
-    "/opt/docker-compose"
     "/opt"
     "/var/log"
+    "/etc/easypanel"
 )
 
 for dir in "${directories[@]}"; do
