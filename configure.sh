@@ -353,7 +353,6 @@ directories=(
     "/opt/docker-compose"
     "/opt"
     "/var/log"
-    "/etc/easypanel"
 )
 
 for dir in "${directories[@]}"; do
