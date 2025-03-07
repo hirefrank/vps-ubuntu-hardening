@@ -238,7 +238,14 @@ systemctl disable postfix
 # Configure Logwatch to use Slack
 cat << EOF > /etc/cron.daily/00logwatch
 #!/bin/bash
-/usr/sbin/logwatch --output stdout --format text --detail high | /usr/local/bin/slack-notify.sh
+# Run logwatch and pipe to a file first
+/usr/sbin/logwatch --output stdout --format text --detail high > /tmp/logwatch_output.txt
+
+# Process the file in chunks to avoid Slack message size limits
+cat /tmp/logwatch_output.txt | /usr/local/bin/slack-notify.sh
+
+# Clean up
+rm /tmp/logwatch_output.txt
 EOF
 
 chmod +x /etc/cron.daily/00logwatch
@@ -253,7 +260,14 @@ cat << 'EOF' > /usr/local/bin/glances-to-slack.sh
 source /etc/slack_config
 
 while true; do
+    # Get Glances output
     output=$(glances --stdout-csv cpu.user,mem,load,network_total)
+
+    # Truncate if too long (3000 char limit for Slack)
+    if [ ${#output} -gt 2900 ]; then
+        output="${output:0:2900}...(truncated)"
+    fi
+
     curl -X POST -H 'Content-type: application/json' --data "{\"text\":\"Glances Report:\n$output\"}" "$SLACK_WEBHOOK_URL"
     sleep 3600  # Send report every hour
 done
@@ -291,6 +305,9 @@ chmod 600 /etc/slack_config
 cat << 'EOF' > /usr/local/bin/slack-notify.sh
 #!/bin/bash
 source /etc/slack_config
+
+MAX_LENGTH=2900  # Slack has ~3000 char limit for text
+
 if [ -p /dev/stdin ]; then
     # If data is piped in, read it
     message=$(cat)
@@ -298,7 +315,28 @@ else
     # Otherwise, use the first argument
     message="$1"
 fi
-curl -X POST -H 'Content-type: application/json' --data "{\"text\":\"$message\"}" "$SLACK_WEBHOOK_URL"
+
+# Check if message is too long and truncate if necessary
+if [ ${#message} -gt $MAX_LENGTH ]; then
+    # Split into multiple messages if too long
+    while [ ${#message} -gt 0 ]; do
+        chunk="${message:0:$MAX_LENGTH}"
+        remaining="${message:$MAX_LENGTH}"
+
+        # Send chunk
+        curl -X POST -H 'Content-type: application/json' --data "{\"text\":\"$chunk\"}" "$SLACK_WEBHOOK_URL"
+
+        # If there's more to send, add a continuation message
+        if [ ${#remaining} -gt 0 ]; then
+            sleep 1  # Brief pause between messages
+        fi
+
+        message="$remaining"
+    done
+else
+    # Send as a single message
+    curl -X POST -H 'Content-type: application/json' --data "{\"text\":\"$message\"}" "$SLACK_WEBHOOK_URL"
+fi
 EOF
 chmod +x /usr/local/bin/slack-notify.sh
 
@@ -354,28 +392,41 @@ directories=(
     "/etc/easypanel"
 )
 
+backup_status="Kopia backup summary:\n"
+failed=0
+
 for dir in "${directories[@]}"; do
     if [ -d "$dir" ] || [ -f "$dir" ]; then
         echo "Backing up $dir..."
-        kopia snapshot create "$dir"
-        if [ $? -ne 0 ]; then
-            echo "Kopia backup failed for: $dir" | /usr/local/bin/slack-notify.sh
+        if kopia snapshot create "$dir"; then
+            backup_status+="✅ $dir: Success\n"
+        else
+            backup_status+="❌ $dir: Failed\n"
+            failed=1
         fi
     else
         echo "Directory or file not found: $dir. Skipping backup."
+        backup_status+="⚠️ $dir: Not found, skipped\n"
     fi
 done
 
 # Backup package list
 echo "Backing up package list..."
 dpkg --get-selections > /root/package_list.txt
-kopia snapshot create /root/package_list.txt
-
-if [ $? -eq 0 ]; then
-    echo "Kopia backup to Backblaze B2 completed successfully" | /usr/local/bin/slack-notify.sh
+if kopia snapshot create /root/package_list.txt; then
+    backup_status+="✅ Package list: Success\n"
 else
-    echo "Kopia backup to Backblaze B2 failed" | /usr/local/bin/slack-notify.sh
+    backup_status+="❌ Package list: Failed\n"
+    failed=1
 fi
+
+if [ $failed -eq 0 ]; then
+    backup_status+="✅ Overall: Kopia backup to Backblaze B2 completed successfully"
+else
+    backup_status+="❌ Overall: Kopia backup to Backblaze B2 had failures"
+fi
+
+echo -e "$backup_status" | /usr/local/bin/slack-notify.sh
 EOF
 
 chmod +x /usr/local/bin/kopia-backup.sh
