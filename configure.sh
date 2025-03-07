@@ -382,15 +382,33 @@ connect_kopia_repository() {
 # Ensure connection to Kopia repository
 connect_kopia_repository
 
-directories=(
-    "/etc"
-    "/home"
-    "/etc/docker"
-    "/root/.docker"
-    "/opt"
-    "/var/log"
-    "/etc/easypanel"
-)
+# Define directories to backup
+if [ -d "/etc/easypanel" ]; then
+    # If Easypanel is installed, use this specific set of directories
+    echo "Easypanel detected, using Easypanel-specific backup paths"
+    directories=(
+        "/etc"
+        "/home"
+        "/etc/docker"
+        "/root/.docker"
+        "/opt"
+        "/var/log"
+        "/etc/easypanel"
+    )
+else
+    # Standard backup directories when Easypanel is not installed
+    echo "Using standard backup paths"
+    directories=(
+        "/etc"
+        "/home"
+        "/etc/docker"
+        "/root/.docker"
+        "/opt"
+        "/var/log"
+        "/var/lib/docker/volumes"
+        "/opt/docker-compose"
+    )
+fi
 
 backup_status="Kopia backup summary:\n"
 failed=0
